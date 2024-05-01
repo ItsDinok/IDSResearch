@@ -31,7 +31,7 @@ def MetricsAggregate(results) -> Dict:
 
         # Extracting values from results
         for samples, metrics in results:
-            for key, value in metrics.items:
+            for key, value in metrics.items():
                 if key not in aggregatedMetrics:    
                     aggregatedMetrics[key] = 0
                 else:
