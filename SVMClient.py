@@ -8,7 +8,7 @@ import flwr as fl
 from scipy.special import y1p_zeros
 from scipy.stats import entropy
 
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVC
 from sklearn.metrics import log_loss, accuracy_score, precision_score, recall_score, f1_score
 from sklearn import datasets
 from sklearn.model_selection import train_test_split
@@ -19,22 +19,20 @@ import warnings
 warnings.simplefilter('ignore')
 
 
-def GetParameters(model: RandomForestClassifier):
+def GetParameters(model: SVC):
     parameters = [
-        model.n_estimators,
-        model.max_depth,
-        model.min_samples_split,
-        model.min_samples_leaf
+        model.degree,
+        model.gamma,
+        model.coef0
         ]
     
     return parameters
 
 
-def SetParameters(model: RandomForestClassifier, parameters: List[np.ndarray]):
-    model.n_estimators = int(parameters[0])
-    model.max_depth = int(parameters[1])
-    model.min_samples_split = int(parameters[2])
-    model.min_samples_leaf = int(parameters[3])
+def SetParameters(model: SVC, parameters: List[np.ndarray]):
+    model.degree = int(parameters[0])
+    model.gamma = parameters[1]
+    model.coef0 = int(parameters[2])
     
     return model
     
@@ -47,20 +45,6 @@ class FlowerClient(fl.client.NumPyClient):
         print(f"Client {client_id} recieved the parameters")
         return GetParameters(model)
     
-    # Train local model, return parameters to server
-    def fit(self, parameters, config):
-        print("Parameters before setting: ", parameters)
-        SetParameters(model, parameters)
-        print("Parameters after setting: ", parameters)
-        
-        model.fit(xTrain, yTrain)
-        print(f"Training finished for round {config['server_round']}.")
-        
-        trainedParameters = GetParameters(model)
-        print("Trained parameters: ", trainedParameters)
-        
-        # Work out what the third return is for
-        return trainedParameters, len(xTrain), {}
     
     def evaluate(self, parameters, config):
         SetParameters(model, parameters)
@@ -99,13 +83,11 @@ if __name__ == "__main__":
     print("Label distribution in the training set:", testCounts)
     
     # Create and fit the local model
-    model = RandomForestClassifier( 
-        class_weight="balanced",
-        criterion="entropy",
-        n_estimators=100,
-        max_depth=40,
-        min_samples_split=2,
-        min_samples_leaf=1
+    model = SVC( 
+        kernel='rbf',
+        tol=0.001,
+        class_weight=None,
+        verbose=False,
     )
     
     model.fit(xTrain, yTrain)
