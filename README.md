@@ -18,3 +18,7 @@ The following python libraries need to be installed:
  - Flower (flwr)
  - Numpy
  - Pandas
+
+```
+pip install flwr scikit-learn numpy pandas tqdm
+```
